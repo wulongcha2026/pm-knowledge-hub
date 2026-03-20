@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+
+{% block title %}仪表盘 - PM Knowledge Hub{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4">
+    <h1 class="text-3xl font-bold text-gray-900 mb-6">👤 欢迎，{{ user.username }}!</h1>
+    
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <a href="{% url 'rag:chat' %}" class="bg-white p-6 rounded-lg shadow hover:shadow-lg">
+            <h2 class="text-xl font-bold text-blue-600 mb-2">💬 RAG 问答助手</h2>
+            <p class="text-gray-600">基于文档的智能问答</p>
+        </a>
+        
+        <a href="{% url 'risk_agent:index' %}" class="bg-white p-6 rounded-lg shadow hover:shadow-lg">
+            <h2 class="text-xl font-bold text-green-600 mb-2">⚠️ 风险识别 Agent</h2>
+            <p class="text-gray-600">AI 驱动的项目风险评估</p>
+        </a>
+        
+        <a href="/admin/" class="bg-white p-6 rounded-lg shadow hover:shadow-lg">
+            <h2 class="text-xl font-bold text-purple-600 mb-2">⚙️ 后台管理</h2>
+            <p class="text-gray-600">管理系统配置</p>
+        </a>
+    </div>
+</div>
+{% endblock %}

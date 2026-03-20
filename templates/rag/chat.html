@@ -1,0 +1,144 @@
+{% extends 'base.html' %}
+
+{% block title %}RAG 知识问答 - PM Knowledge Hub{% endblock %}
+
+{% block extra_head %}
+<style>
+    .chat-container { height: 500px; overflow-y: auto; }
+    .message-user { background-color: #dbeafe; }
+    .message-assistant { background-color: #f3f4f6; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4">
+    <h1 class="text-3xl font-bold text-gray-900 mb-6">💬 RAG 知识问答助手</h1>
+    
+    <div class="bg-white rounded-lg shadow">
+        <!-- 聊天区域 -->
+        <div id="chat-container" class="chat-container p-4 space-y-4">
+            <div class="message-assistant p-4 rounded-lg">
+                <p class="text-gray-800">你好！我是项目管理知识助手，有什么问题可以问我哦～ 🍵</p>
+            </div>
+        </div>
+        
+        <!-- 输入区域 -->
+        <div class="border-t p-4">
+            <div class="flex gap-4">
+                <input type="text" id="question-input" 
+                       placeholder="输入你的问题..." 
+                       class="flex-1 px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                       onkeypress="if(event.keyCode==13) sendQuestion()">
+                <button onclick="sendQuestion()" 
+                        class="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+                    发送
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 引用来源 -->
+    <div id="sources-container" class="mt-6 hidden">
+        <h2 class="text-xl font-bold text-gray-900 mb-4">📚 引用来源</h2>
+        <div id="sources-list" class="space-y-2"></div>
+    </div>
+</div>
+
+<script>
+let conversationId = null;
+
+async function sendQuestion() {
+    const input = document.getElementById('question-input');
+    const question = input.value.trim();
+    if (!question) return;
+    
+    // 添加用户消息
+    addMessage(question, 'user');
+    input.value = '';
+    
+    // 显示加载中
+    const loadingId = addMessage('思考中...', 'assistant', true);
+    
+    try {
+        const response = await fetch('{% url "rag:chat_api" %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({
+                question: question,
+                conversation_id: conversationId
+            })
+        });
+        
+        const data = await response.json();
+        
+        // 移除加载消息
+        removeMessage(loadingId);
+        
+        if (data.error) {
+            addMessage('❌ 错误：' + data.error, 'assistant');
+        } else {
+            addMessage(data.answer, 'assistant');
+            conversationId = data.conversation_id;
+            
+            // 显示引用来源
+            if (data.sources && data.sources.length > 0) {
+                showSources(data.sources);
+            }
+        }
+    } catch (error) {
+        removeMessage(loadingId);
+        addMessage('❌ 请求失败：' + error.message, 'assistant');
+    }
+}
+
+function addMessage(content, role, isLoading = false) {
+    const container = document.getElementById('chat-container');
+    const id = 'msg-' + Date.now();
+    const div = document.createElement('div');
+    div.id = id;
+    div.className = `message-${role} p-4 rounded-lg`;
+    div.innerHTML = `<p class="text-gray-800">${content}</p>`;
+    container.appendChild(div);
+    container.scrollTop = container.scrollHeight;
+    return id;
+}
+
+function removeMessage(id) {
+    const msg = document.getElementById(id);
+    if (msg) msg.remove();
+}
+
+function showSources(sources) {
+    const container = document.getElementById('sources-container');
+    const list = document.getElementById('sources-list');
+    
+    list.innerHTML = sources.map((source, i) => `
+        <div class="bg-white p-4 rounded-lg shadow">
+            <h3 class="font-semibold text-blue-600">${i+1}. ${source.title || '文档片段'}</h3>
+            <p class="text-gray-600 text-sm mt-1">${source.content.substring(0, 200)}...</p>
+            <p class="text-xs text-gray-500 mt-2">相似度：${(source.score * 100).toFixed(1)}%</p>
+        </div>
+    `).join('');
+    
+    container.classList.remove('hidden');
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+</script>
+{% endblock %}

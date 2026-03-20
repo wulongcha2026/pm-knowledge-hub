@@ -1,10 +1,9 @@
 """
-RAG 服务 - 基于 LangChain + Chroma + bge-m3
+RAG 服务 - 基于 LangChain + Chroma + 智谱嵌入模型
 """
 import os
 import chromadb
 from chromadb.config import Settings
-from sentence_transformers import SentenceTransformer
 from openai import OpenAI
 from django.conf import settings
 from typing import List, Dict, Any
@@ -14,11 +13,15 @@ class RAGService:
     """RAG 服务类"""
     
     def __init__(self):
-        # 初始化嵌入模型（本地 bge-m3）
-        self.embedding_model = SentenceTransformer(
-            settings.EMBEDDING_MODEL,
-            device=settings.EMBEDDING_DEVICE
+        # 初始化智谱 LLM 和嵌入模型（使用同一个 API）
+        self.llm_client = OpenAI(
+            api_key=settings.ZHIPU_API_KEY,
+            base_url=settings.ZHIPU_API_BASE
         )
+        self.llm_model = settings.ZHIPU_LLM_MODEL
+        
+        # 智谱嵌入模型
+        self.embedding_model_name = "embedding-2"
         
         # 初始化 Chroma 向量数据库
         self.chroma_client = chromadb.PersistentClient(
@@ -28,18 +31,14 @@ class RAGService:
             name="pm_knowledge",
             metadata={"hnsw:space": "cosine"}
         )
-        
-        # 初始化智谱 LLM（OpenAI 兼容接口）
-        self.llm_client = OpenAI(
-            api_key=settings.ZHIPU_API_KEY,
-            base_url=settings.ZHIPU_API_BASE
-        )
-        self.llm_model = settings.ZHIPU_LLM_MODEL
     
     def get_embedding(self, text: str) -> List[float]:
-        """获取文本的向量嵌入"""
-        embedding = self.embedding_model.encode(text, normalize_embeddings=True)
-        return embedding.tolist()
+        """获取文本的向量嵌入（使用智谱 API）"""
+        response = self.llm_client.embeddings.create(
+            model=self.embedding_model_name,
+            input=text
+        )
+        return response.data[0].embedding
     
     def add_documents(self, documents: List[Dict[str, Any]]):
         """添加文档到向量数据库"""

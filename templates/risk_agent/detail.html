@@ -1,0 +1,100 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ assessment.title }} - 风险识别{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto px-4">
+    <div class="mb-6">
+        <a href="{% url 'risk_agent:index' %}" class="text-blue-600 hover:text-blue-800">← 返回列表</a>
+    </div>
+    
+    <!-- 评估概览 -->
+    <div class="bg-white rounded-lg shadow p-6 mb-6">
+        <div class="flex justify-between items-start">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-900 mb-2">{{ assessment.title }}</h1>
+                <p class="text-gray-600">{{ assessment.created_at|date:"Y-m-d H:i" }}</p>
+            </div>
+            <span class="px-4 py-2 rounded-full text-lg font-semibold
+                {% if assessment.overall_risk_level == 'critical' %}bg-red-100 text-red-800
+                {% elif assessment.overall_risk_level == 'high' %}bg-orange-100 text-orange-800
+                {% elif assessment.overall_risk_level == 'medium' %}bg-yellow-100 text-yellow-800
+                {% elif assessment.overall_risk_level == 'low' %}bg-green-100 text-green-800
+                {% else %}bg-gray-100 text-gray-800{% endif %}">
+                {% if assessment.overall_risk_level == 'critical' %}🔴 严重风险
+                {% elif assessment.overall_risk_level == 'high' %}🟠 高风险
+                {% elif assessment.overall_risk_level == 'medium' %}🟡 中等风险
+                {% elif assessment.overall_risk_level == 'low' %}🟢 低风险
+                {% else %}⚪ 评估中{% endif %}
+            </span>
+        </div>
+        
+        <div class="mt-4 grid grid-cols-2 gap-4">
+            <div class="bg-gray-50 p-4 rounded">
+                <h3 class="font-semibold text-gray-700 mb-2">📋 项目描述</h3>
+                <p class="text-gray-600 text-sm">{{ assessment.project_description|truncatewords:50 }}</p>
+            </div>
+            {% if assessment.meeting_notes %}
+                <div class="bg-gray-50 p-4 rounded">
+                    <h3 class="font-semibold text-gray-700 mb-2">📝 会议纪要</h3>
+                    <p class="text-gray-600 text-sm">{{ assessment.meeting_notes|truncatewords:30 }}</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- 风险清单 -->
+    <div class="bg-white rounded-lg shadow">
+        <div class="px-6 py-4 border-b">
+            <h2 class="text-lg font-semibold">📊 风险清单 (共{{ risk_items.count }}项)</h2>
+        </div>
+        <div class="divide-y">
+            {% for risk in risk_items %}
+                <div class="p-6">
+                    <div class="flex justify-between items-start mb-3">
+                        <div>
+                            <h3 class="font-semibold text-gray-900">{{ risk.title }}</h3>
+                            <p class="text-sm text-gray-500 mt-1">
+                                📁 {{ risk.get_category_display }}
+                            </p>
+                        </div>
+                        <span class="px-3 py-1 rounded-full text-sm font-medium
+                            {% if risk.risk_level == 'critical' %}bg-red-100 text-red-800
+                            {% elif risk.risk_level == 'high' %}bg-orange-100 text-orange-800
+                            {% elif risk.risk_level == 'medium' %}bg-yellow-100 text-yellow-800
+                            {% else %}bg-green-100 text-green-800{% endif %}">
+                            {% if risk.risk_level == 'critical' %}严重
+                            {% elif risk.risk_level == 'high' %}高
+                            {% elif risk.risk_level == 'medium' %}中
+                            {% else %}低{% endif %}
+                        </span>
+                    </div>
+                    
+                    <p class="text-gray-700 mb-3">{{ risk.description }}</p>
+                    
+                    <div class="grid grid-cols-2 gap-4 mb-3">
+                        <div class="text-sm">
+                            <span class="text-gray-500">发生概率：</span>
+                            <span class="font-medium">{{ risk.probability }}/10</span>
+                        </div>
+                        <div class="text-sm">
+                            <span class="text-gray-500">影响程度：</span>
+                            <span class="font-medium">{{ risk.impact }}/10</span>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-blue-50 p-3 rounded">
+                        <p class="text-sm text-blue-900">
+                            <strong>💡 应对建议：</strong> {{ risk.mitigation_suggestions }}
+                        </p>
+                    </div>
+                </div>
+            {% empty %}
+                <div class="p-6 text-center text-gray-500">
+                    暂无风险项
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

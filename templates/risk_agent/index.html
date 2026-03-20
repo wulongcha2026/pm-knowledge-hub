@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+
+{% block title %}风险识别 - PM Knowledge Hub{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto px-4">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-3xl font-bold text-gray-900">⚠️ 项目风险识别 Agent</h1>
+        <a href="{% url 'risk_agent:create' %}" class="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700">
+            + 新建评估
+        </a>
+    </div>
+    
+    <div class="bg-white rounded-lg shadow">
+        <div class="px-6 py-4 border-b">
+            <h2 class="text-lg font-semibold">历史评估记录</h2>
+        </div>
+        <div class="divide-y">
+            {% for assessment in assessments %}
+                <a href="{% url 'risk_agent:detail' assessment.pk %}" class="block px-6 py-4 hover:bg-gray-50">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <h3 class="font-semibold text-gray-900">{{ assessment.title }}</h3>
+                            <p class="text-sm text-gray-500 mt-1">{{ assessment.created_at|date:"Y-m-d H:i" }}</p>
+                        </div>
+                        <div class="flex items-center gap-4">
+                            <span class="px-3 py-1 rounded-full text-sm
+                                {% if assessment.overall_risk_level == 'critical' %}bg-red-100 text-red-800
+                                {% elif assessment.overall_risk_level == 'high' %}bg-orange-100 text-orange-800
+                                {% elif assessment.overall_risk_level == 'medium' %}bg-yellow-100 text-yellow-800
+                                {% else %}bg-green-100 text-green-800
+                                {% endif %}">
+                                {% if assessment.overall_risk_level == 'critical' %}严重
+                                {% elif assessment.overall_risk_level == 'high' %}高
+                                {% elif assessment.overall_risk_level == 'medium' %}中
+                                {% elif assessment.overall_risk_level == 'low' %}低
+                                {% else %}评估中
+                                {% endif %}
+                            </span>
+                            <span class="text-sm text-gray-500">{{ assessment.risk_items.count }} 个风险</span>
+                        </div>
+                    </div>
+                </a>
+            {% empty %}
+                <div class="px-6 py-8 text-center text-gray-500">
+                    暂无风险评估记录，点击上方按钮创建第一个评估
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

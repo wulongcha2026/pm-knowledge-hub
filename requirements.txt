@@ -10,10 +10,9 @@ django-cors-headers>=4.3
 langchain>=0.3.0
 langchain-community>=0.3.0
 chromadb>=0.5.0
-sentence-transformers>=3.0.0  # bge-m3 嵌入模型
 
-# 智谱 AI（OpenAI 兼容）
-openai>=1.50.0  # 智谱使用 OpenAI 兼容接口
+# 智谱 AI（OpenAI 兼容接口，包含 LLM 和嵌入模型）
+openai>=1.50.0
 
 # 文档处理
 python-docx>=1.1.0

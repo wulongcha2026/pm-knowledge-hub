@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+
+{% block title %}基础知识库 - PM Knowledge Hub{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <!-- 搜索框 -->
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-900 mb-4">📚 基础知识库</h1>
+        <form method="get" class="flex gap-4">
+            <input type="text" name="q" value="{{ query }}" placeholder="搜索文档..." 
+                   class="flex-1 px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+            <button type="submit" class="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">搜索</button>
+        </form>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <!-- 左侧边栏 - 分类 -->
+        <div class="md:col-span-1">
+            <div class="bg-white rounded-lg shadow p-4 mb-4">
+                <h2 class="text-lg font-semibold text-gray-900 mb-3">📁 分类</h2>
+                <ul class="space-y-2">
+                    <li>
+                        <a href="{% url 'core:index' %}" class="text-blue-600 hover:text-blue-800 {% if not category_id %}font-bold{% endif %}">
+                            全部分类
+                        </a>
+                    </li>
+                    {% for category in categories %}
+                        <li>
+                            <a href="?category={{ category.id }}" class="text-gray-700 hover:text-blue-600 {% if category_id == category.id|stringformat:"s" %}font-bold{% endif %}">
+                                {{ category.name }}
+                            </a>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+
+            <div class="bg-white rounded-lg shadow p-4">
+                <h2 class="text-lg font-semibold text-gray-900 mb-3">🏷️ 热门标签</h2>
+                <div class="flex flex-wrap gap-2">
+                    {% for tag in tags %}
+                        <span class="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm">{{ tag.name }}</span>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- 主内容区 - 文档列表 -->
+        <div class="md:col-span-3">
+            <div class="bg-white rounded-lg shadow">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h2 class="text-lg font-semibold text-gray-900">
+                        {% if query %}
+                            搜索结果：{{ query }} (共{{ documents.count }}篇)
+                        {% else %}
+                            所有文档 (共{{ documents.count }}篇)
+                        {% endif %}
+                    </h2>
+                </div>
+                <div class="divide-y divide-gray-200">
+                    {% for document in documents %}
+                        <div class="p-6 hover:bg-gray-50">
+                            <a href="{% url 'core:document_detail' document.pk %}" class="block">
+                                <h3 class="text-xl font-semibold text-blue-600 hover:text-blue-800 mb-2">
+                                    {{ document.title }}
+                                </h3>
+                                <p class="text-gray-600 mb-3 line-clamp-2">{{ document.summary|default:document.content|truncatewords:50 }}</p>
+                                <div class="flex items-center text-sm text-gray-500">
+                                    {% if document.category %}
+                                        <span class="mr-4">📁 {{ document.category.name }}</span>
+                                    {% endif %}
+                                    <span class="mr-4">👁️ {{ document.view_count }} 次浏览</span>
+                                    <span>📅 {{ document.created_at|date:"Y-m-d" }}</span>
+                                </div>
+                            </a>
+                        </div>
+                    {% empty %}
+                        <div class="p-6 text-center text-gray-500">
+                            暂无文档
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
